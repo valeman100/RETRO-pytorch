@@ -76,8 +76,7 @@ def tokenize(texts, add_special_tokens = True):
         return_tensors = 'pt'
     )
 
-    token_ids = encoding.input_ids
-    return token_ids
+    return encoding.input_ids
 
 # text to chunks
 
@@ -210,8 +209,7 @@ def bert_embed(
 
     numer = (hidden_state[:, 1:] * mask).sum(dim = 1)
     denom = mask.sum(dim = 1)
-    masked_mean =  numer / (denom + eps)
-    return masked_mean
+    return numer / (denom + eps)
 
 # chunks to knn
 
@@ -269,7 +267,7 @@ def memmap_file_to_chunks_(
             filename = root_path / f'{ind:05d}.npy'
             data_slice = f[dim_slice]
 
-            np.save(str(filename), f[dim_slice])
+            np.save(str(filename), data_slice)
             print(f'saved {str(filename)}')
 
 def index_embeddings(
@@ -297,8 +295,7 @@ def index_embeddings(
         use_gpu = torch.cuda.is_available(),
     )
 
-    index = faiss_read_index(index_path)
-    return index
+    return faiss_read_index(index_path)
 
 def chunks_to_index_and_embed(
     *,

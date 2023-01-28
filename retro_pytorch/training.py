@@ -31,9 +31,7 @@ def eval_decorator(fn):
     return inner
 
 def safe_cat(accum, t, dim = -1):
-    if not exists(accum):
-        return t
-    return torch.cat((accum, t), dim = dim)
+    return torch.cat((accum, t), dim = dim) if exists(accum) else t
 
 # sampling helpers
 
