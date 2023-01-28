@@ -59,10 +59,7 @@ class RMSNorm(nn.Module):
         norm = x.norm(keepdim = True, dim = -1) * self.scale
         out = (x / norm.clamp(min = self.eps)) * self.gamma
 
-        if not exists(self.weight):
-            return out
-
-        return out * (x * self.weight).sigmoid()
+        return out * (x * self.weight).sigmoid() if exists(self.weight) else out
 
 # pre and post norm residual wrapper modules
 
@@ -328,7 +325,13 @@ class Encoder(nn.Module):
         rotary_emb_dim = min(dim_head, MIN_DIM_HEAD)
         self.rotary_pos_emb = RotaryEmbedding(rotary_emb_dim)
 
-        wrapper = partial(PreNorm, dim, norm_klass = norm_klass) if not post_norm else partial(PostNorm, dim, scale_residual = scale_residual, norm_klass = norm_klass)
+        wrapper = (
+            partial(
+                PostNorm, dim, scale_residual=scale_residual, norm_klass=norm_klass
+            )
+            if post_norm
+            else partial(PreNorm, dim, norm_klass=norm_klass)
+        )
 
         for layer_num in range(1, depth + 1):
             has_cross_attn = not exists(cross_attn_layers) or layer_num in cross_attn_layers
@@ -386,7 +389,13 @@ class Decoder(nn.Module):
         rotary_emb_dim = min(dim_head, MIN_DIM_HEAD)
         self.rotary_pos_emb = RotaryEmbedding(rotary_emb_dim)
 
-        wrapper = partial(PreNorm, dim, norm_klass = norm_klass) if not post_norm else partial(PostNorm, dim, scale_residual = scale_residual, norm_klass = norm_klass)
+        wrapper = (
+            partial(
+                PostNorm, dim, scale_residual=scale_residual, norm_klass=norm_klass
+            )
+            if post_norm
+            else partial(PreNorm, dim, norm_klass=norm_klass)
+        )
 
         self.chunk_size = chunk_size
 
